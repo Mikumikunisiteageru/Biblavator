@@ -49,6 +49,7 @@ def main():
 	score, sext = os.path.splitext(sname)
 	if sext == "":
 		sext = ".pdf"
+		spath += ".pdf"
 	if len(args.filename) == 1:
 		tpath = os.path.join(sdir, score + "_lavatus" + ".pdf")
 	else:
