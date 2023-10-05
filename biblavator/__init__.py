@@ -54,16 +54,22 @@ def pdflava(srcpath, dscpath, password=""):
 		dewatermark(pdf)
 		pdf.save(dscpath.join())
 
+def extractpdfstream(htmlbytes):
+	prefix = b"var content_data ="
+	circumfix = b"\""
+	posref = htmlbytes.find(prefix)
+	poslqt = htmlbytes.find(circumfix, posref)
+	posrqt = htmlbytes.find(circumfix, poslqt + 1)
+	pdfbytes = base64.b64decode(htmlbytes[poslqt+1:posrqt])
+	return io.BytesIO(pdfbytes)
+
 def ziplava(srcpath, dscpath):
 	with pikepdf.new() as pdf:
 		with zipfile.ZipFile(srcpath.join()) as fzip:
 			for fname in sorted(fzip.namelist()):
 				htmlbytes = fzip.read(fname)
-				posref = htmlbytes.find(b"var content_data =")
-				poslqt = htmlbytes.find(b"\"", posref)
-				posrqt = htmlbytes.find(b"\"", poslqt + 1)
-				pdfbytes = base64.b64decode(htmlbytes[poslqt+1:posrqt])
-				with pikepdf.open(io.BytesIO(pdfbytes)) as subpdf:
+				pdfstream = extractpdfstream(htmlbytes)
+				with pikepdf.open(pdfstream) as subpdf:
 					pdf.pages.extend(subpdf.pages)
 		dewatermark(pdf)
 		pdf.save(dscpath.join())
